@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local shared       = ReplicatedStorage:WaitForChild("JTF", 15)
 local AdminConfig  = require(shared:WaitForChild("Config"):WaitForChild("AdminConfig"))
+local BPCfg        = require(shared:WaitForChild("Config"):WaitForChild("BattlePassConfig"))
 local Remotes      = require(shared:WaitForChild("Remotes"))
 
 local AdminService = {}
@@ -234,6 +235,35 @@ function Commands.viewLogs(actor, count)
     return true, slice
 end
 
+function Commands.maxBP(actor, targetName)
+    if actor.UserId ~= AdminConfig.OwnerId then return false, "Owner only" end
+    local target = resolvePlayer(targetName or actor.Name)
+    if not target then return false, "Player not found" end
+    _DataService.UpdateData(target, function(data)
+        data.BattlePassOwned = true
+        data.BattlePassTier  = BPCfg.MaxTier
+        data.BattlePassXP    = BPCfg.MaxTier * BPCfg.BPXPPerTier
+    end)
+    log(actor.UserId, actor.Name, "maxBP", target.Name)
+    return true, "Battle Pass maxed for " .. target.Name
+end
+
+function Commands.giveMax(actor, targetName)
+    if actor.UserId ~= AdminConfig.OwnerId then return false, "Owner only" end
+    local target = resolvePlayer(targetName or actor.Name)
+    if not target then return false, "Player not found" end
+    _EconomyService.AddCash(target, 999999)
+    _XPService.AwardXP(target, 999999, "Admin")
+    _RankService.SetRank(target, 11)
+    _DataService.UpdateData(target, function(data)
+        data.BattlePassOwned = true
+        data.BattlePassTier  = BPCfg.MaxTier
+        data.BattlePassXP    = BPCfg.MaxTier * BPCfg.BPXPPerTier
+    end)
+    log(actor.UserId, actor.Name, "giveMax", target.Name)
+    return true, "Maxed everything for " .. target.Name
+end
+
 function Commands.serverStats(actor)
     local stats = {
         playerCount  = #Players:GetPlayers(),
@@ -264,6 +294,8 @@ local COMMAND_PERM = {
     teleport    = "teleport",
     viewLogs    = "viewLogs",
     serverStats = "serverStats",
+    maxBP       = "serverStats",
+    giveMax     = "serverStats",
 }
 
 function AdminService.Init()
