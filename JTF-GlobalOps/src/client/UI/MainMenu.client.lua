@@ -230,7 +230,7 @@ gridLayout.Parent            = navGrid
 local NAV_ITEMS = {
     { icon = "⬡", label = "DEPLOY",        sub = "Enter the battlefield",   key = "Deploy",      style = "primary", order = 1 },
     { icon = "⊞",  label = "MISSION BOARD", sub = "Daily missions & ops",    key = "MissionBoard",style = "ghost",   order = 2 },
-    { icon = "⊙",  label = "LOADOUT",       sub = "Weapons & equipment",     key = "Loadout",     style = "ghost",   order = 3 },
+    { icon = "⊙",  label = "LOADOUT",       sub = "Weapons & equipment",     key = "LoadoutEditor", style = "ghost",   order = 3 },
     { icon = "☰",  label = "BRANCH & JOB",  sub = "Select your role",        key = "BranchSelect",style = "ghost",   order = 4 },
     { icon = "★",  label = "BATTLE PASS",   sub = "Season rewards",          key = "BattlePass",  style = "ghost",   order = 5 },
     { icon = "◎",  label = "SHOP",          sub = "Cosmetics & upgrades",    key = "GamepassShop",style = "ghost",   order = 6 },

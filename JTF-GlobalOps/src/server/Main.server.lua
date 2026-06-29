@@ -114,12 +114,46 @@ Remotes.SetCallback("GetLeaderboard", function(player, category)
     return results
 end)
 
--- ─── 9. Admin system ─────────────────────────────────────────────────────────
+-- ─── 9. Loadout remotes ───────────────────────────────────────────────────────
+local WepCfg = require(shared:WaitForChild("Config"):WaitForChild("WeaponConfig"))
+
+Remotes.SetCallback("GetLoadout", function(player)
+    local data = DataService.GetData(player)
+    return data and data.Loadout or { Primary = "M4A1", Secondary = "M17", Throwable = "FragGrenade" }
+end)
+
+Remotes.SetCallback("SaveLoadout", function(player, loadoutTable)
+    if type(loadoutTable) ~= "table" then return false end
+    -- Validate each slot against WeaponConfig
+    local SLOT_CATS = {
+        Primary   = { AssaultRifle=true, LMG=true, SniperRifle=true, Shotgun=true },
+        Secondary = { Pistol=true },
+        Throwable = { Thrown=true },
+    }
+    for slot, cats in pairs(SLOT_CATS) do
+        local weaponId = loadoutTable[slot]
+        if weaponId ~= nil then
+            local cfg = WepCfg.Weapons[weaponId]
+            if not cfg or not cats[cfg.category] then
+                return false
+            end
+        end
+    end
+    DataService.UpdateData(player, function(data)
+        data.Loadout = {
+            Primary   = loadoutTable.Primary,
+            Secondary = loadoutTable.Secondary,
+            Throwable = loadoutTable.Throwable,
+        }
+    end)
+    return true
+end)
+
 local AdminService = Service("AdminService")
 AdminService.SetDependencies(DataService, XPService, EconomyService, RankService, nil, nil)
 AdminService.Init()
 
--- ─── 10. AI systems ──────────────────────────────────────────────────────────
+-- ─── 11. AI systems ──────────────────────────────────────────────────────────
 local aiFolder    = script.Parent:WaitForChild("AI", 10)
 local NPCService  = require(aiFolder:WaitForChild("NPCService"))
 local NPCSpawner  = require(aiFolder:WaitForChild("NPCSpawner"))
@@ -130,14 +164,14 @@ NPCService.Init()
 -- Wire NPC services into AdminService now that they're loaded
 AdminService.SetDependencies(DataService, XPService, EconomyService, RankService, NPCService, NPCSpawner)
 
--- ─── 11. Tutorial ────────────────────────────────────────────────────────────
+-- ─── 12. Tutorial ────────────────────────────────────────────────────────────
 local tutorialFolder  = script.Parent:WaitForChild("Tutorial", 10)
 local TutorialService = require(tutorialFolder:WaitForChild("TutorialService"))
 
 TutorialService.SetDependencies(XPService, RankService, WeaponService, NPCSpawner)
 TutorialService.Init()
 
--- ─── 11. Wire tutorial kill tracking into WeaponService ──────────────────────
+-- ─── 13. Wire tutorial kill tracking into WeaponService ──────────────────────
 -- When WeaponService detects a kill, also notify TutorialService
 local originalHandleKill = WeaponService.HandleKill
 WeaponService.HandleKill = function(shooter, victim, weaponId, victimModel)
@@ -147,7 +181,7 @@ WeaponService.HandleKill = function(shooter, victim, weaponId, victimModel)
     end
 end
 
--- ─── 12. Tutorial trigger on player join ─────────────────────────────────────
+-- ─── 14. Tutorial trigger on player join ─────────────────────────────────────
 Players.PlayerAdded:Connect(function(player)
     task.delay(4, function()
         TutorialService.StartForPlayer(player)

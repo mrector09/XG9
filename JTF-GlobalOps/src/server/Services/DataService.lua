@@ -97,6 +97,9 @@ local function defaultData()
         SOFUnits         = {},       -- { unitId = true }
         SOFSelectionActive = false,
 
+        -- Loadout
+        Loadout          = { Primary = "M4A1", Secondary = "M17", Throwable = "FragGrenade" },
+
         -- Flags
         TutorialComplete = false,
 

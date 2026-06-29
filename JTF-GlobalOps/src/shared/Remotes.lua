@@ -135,6 +135,8 @@ function Remotes.Init()
         "GetLeaderboard",       -- args: category → returns top 25 entries
         "SetCallsign",          -- args: callsign → returns ok, reason
         "SelectBranch",         -- args: branch → returns ok
+        "GetLoadout",           -- returns saved loadout table { Primary, Secondary, Throwable }
+        "SaveLoadout",          -- args: loadoutTable → returns ok
         "AdminCommand",         -- args: cmd, ...args → returns { ok, msg/data }
         "AdminGetPlayers",      -- returns list of online players with data snapshots
     }
