@@ -112,7 +112,12 @@ Remotes.SetCallback("GetLeaderboard", function(player, category)
     return results
 end)
 
--- ─── 9. AI systems ───────────────────────────────────────────────────────────
+-- ─── 9. Admin system ─────────────────────────────────────────────────────────
+local AdminService = Service("AdminService")
+AdminService.SetDependencies(DataService, XPService, EconomyService, RankService, nil, nil)
+AdminService.Init()
+
+-- ─── 10. AI systems ──────────────────────────────────────────────────────────
 local aiFolder    = script.Parent:WaitForChild("AI", 10)
 local NPCService  = require(aiFolder:WaitForChild("NPCService"))
 local NPCSpawner  = require(aiFolder:WaitForChild("NPCSpawner"))
@@ -120,7 +125,10 @@ local NPCSpawner  = require(aiFolder:WaitForChild("NPCSpawner"))
 NPCService.SetDependencies(XPService, MissionService)
 NPCService.Init()
 
--- ─── 10. Tutorial ────────────────────────────────────────────────────────────
+-- Wire NPC services into AdminService now that they're loaded
+AdminService.SetDependencies(DataService, XPService, EconomyService, RankService, NPCService, NPCSpawner)
+
+-- ─── 11. Tutorial ────────────────────────────────────────────────────────────
 local tutorialFolder  = script.Parent:WaitForChild("Tutorial", 10)
 local TutorialService = require(tutorialFolder:WaitForChild("TutorialService"))
 

@@ -307,6 +307,52 @@ Remotes.OnClient("DeploymentEnded", function(payload)
     )
 end)
 
+Remotes.OnClient("AdminAnnounce", function(payload)
+    -- Show a prominent full-width announcement banner
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "AdminAnnounce_" .. os.clock()
+    sg.ResetOnSpawn = false
+    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    sg.DisplayOrder = 100
+    sg.Parent = LocalPlayer.PlayerGui
+
+    local banner = Instance.new("Frame")
+    banner.Name = "Banner"
+    banner.Size = UDim2.new(1, 0, 0, 56)
+    banner.Position = UDim2.new(0, 0, 0, -60)
+    banner.BackgroundColor3 = Color3.fromRGB(10, 13, 20)
+    banner.BorderSizePixel = 0
+    banner.Parent = sg
+
+    local stripe = Instance.new("Frame")
+    stripe.Size = UDim2.new(1, 0, 0, 3)
+    stripe.Position = UDim2.new(0, 0, 1, -3)
+    stripe.BackgroundColor3 = Color3.fromRGB(255, 184, 0)
+    stripe.BorderSizePixel = 0
+    stripe.Parent = banner
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -32, 1, 0)
+    lbl.Position = UDim2.new(0, 16, 0, 0)
+    lbl.Text = "📢  " .. (payload.sender or "Admin") .. ": " .. (payload.message or "")
+    lbl.TextColor3 = Color3.fromRGB(240, 246, 252)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 15
+    lbl.BackgroundTransparency = 1
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextWrapped = true
+    lbl.Parent = banner
+
+    TweenService:Create(banner, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        { Position = UDim2.new(0, 0, 0, 0) }):Play()
+
+    task.delay(6, function()
+        TweenService:Create(banner, TweenInfo.new(0.3),
+            { Position = UDim2.new(0, 0, 0, -60) }):Play()
+        task.delay(0.35, function() sg:Destroy() end)
+    end)
+end)
+
 -- ─── Key bindings ─────────────────────────────────────────────────────────────
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
