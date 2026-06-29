@@ -7,13 +7,23 @@ local UserInputService  = game:GetService("UserInputService")
 local RunService        = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
+print("[JTF] OwnerPanel starting — UserId:", LocalPlayer.UserId)
 
 local shared   = ReplicatedStorage:WaitForChild("JTF", 15)
+if not shared then
+    warn("[JTF] OwnerPanel: ReplicatedStorage.JTF not found — is Rojo synced?")
+    return
+end
+
 local AdminCfg = require(shared:WaitForChild("Config"):WaitForChild("AdminConfig"))
 
 -- In Studio, UserId is negative — always allow so you can test your own panel
 local IS_STUDIO = RunService:IsStudio()
-if not IS_STUDIO and not AdminCfg.IsAdmin(LocalPlayer.UserId) then return end
+print("[JTF] OwnerPanel admin check — isStudio:", IS_STUDIO, "isAdmin:", AdminCfg.IsAdmin(LocalPlayer.UserId))
+if not IS_STUDIO and not AdminCfg.IsAdmin(LocalPlayer.UserId) then
+    print("[JTF] OwnerPanel: not admin, exiting")
+    return
+end
 
 local Theme   = require(shared:WaitForChild("Theme"))
 local Remotes = require(shared:WaitForChild("Remotes"))

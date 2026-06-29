@@ -1,6 +1,8 @@
 -- Main.server.lua — boots all JTF services in dependency order.
 -- Place this Script directly inside ServerScriptService/JTF (alongside the Services folder).
 
+print("[JTF] Main.server.lua is running — Rojo sync OK")
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage     = game:GetService("ServerStorage")
 
