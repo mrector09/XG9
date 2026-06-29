@@ -112,13 +112,35 @@ Remotes.SetCallback("GetLeaderboard", function(player, category)
     return results
 end)
 
--- ─── 9. Tutorial trigger ─────────────────────────────────────────────────────
+-- ─── 9. AI systems ───────────────────────────────────────────────────────────
+local aiFolder    = script.Parent:WaitForChild("AI", 10)
+local NPCService  = require(aiFolder:WaitForChild("NPCService"))
+local NPCSpawner  = require(aiFolder:WaitForChild("NPCSpawner"))
+
+NPCService.SetDependencies(XPService, MissionService)
+NPCService.Init()
+
+-- ─── 10. Tutorial ────────────────────────────────────────────────────────────
+local tutorialFolder  = script.Parent:WaitForChild("Tutorial", 10)
+local TutorialService = require(tutorialFolder:WaitForChild("TutorialService"))
+
+TutorialService.SetDependencies(XPService, RankService, WeaponService, NPCSpawner)
+TutorialService.Init()
+
+-- ─── 11. Wire tutorial kill tracking into WeaponService ──────────────────────
+-- When WeaponService detects a kill, also notify TutorialService
+local originalHandleKill = WeaponService.HandleKill
+WeaponService.HandleKill = function(shooter, victim, weaponId, victimModel)
+    originalHandleKill(shooter, victim, weaponId)
+    if victimModel then
+        TutorialService.OnPlayerKill(shooter, victimModel)
+    end
+end
+
+-- ─── 12. Tutorial trigger on player join ─────────────────────────────────────
 Players.PlayerAdded:Connect(function(player)
-    task.delay(4, function()  -- after all services are ready
-        local data = DataService.GetData(player)
-        if data and not data.TutorialComplete then
-            Remotes.FireClient("TutorialStepTriggered", player, { step = 1 })
-        end
+    task.delay(4, function()
+        TutorialService.StartForPlayer(player)
     end)
 end)
 
