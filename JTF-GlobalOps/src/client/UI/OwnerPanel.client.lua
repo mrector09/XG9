@@ -6,15 +6,17 @@ local TweenService      = game:GetService("TweenService")
 local UserInputService  = game:GetService("UserInputService")
 local RunService        = game:GetService("RunService")
 
-local shared   = ReplicatedStorage:WaitForChild("JTF", 15)
-local Theme    = require(shared:WaitForChild("Theme"))
-local Remotes  = require(shared:WaitForChild("Remotes"))
-local AdminCfg = require(shared:WaitForChild("Config"):WaitForChild("AdminConfig"))
-
 local LocalPlayer = Players.LocalPlayer
 
--- Only show to admins
-if not AdminCfg.IsAdmin(LocalPlayer.UserId) then return end
+local shared   = ReplicatedStorage:WaitForChild("JTF", 15)
+local AdminCfg = require(shared:WaitForChild("Config"):WaitForChild("AdminConfig"))
+
+-- In Studio, UserId is negative — always allow so you can test your own panel
+local IS_STUDIO = RunService:IsStudio()
+if not IS_STUDIO and not AdminCfg.IsAdmin(LocalPlayer.UserId) then return end
+
+local Theme   = require(shared:WaitForChild("Theme"))
+local Remotes = require(shared:WaitForChild("Remotes"))
 
 -- ─── Panel dimensions ─────────────────────────────────────────────────────────
 local PANEL_W  = 820
