@@ -172,7 +172,6 @@ Remotes.OnClient("FuelUpdated", function(payload)
     if payload.vehicleId == CurrentVehicleId then
         updateFuelGauge(payload.fuel, payload.maxFuel or 100)
         if payload.fuel <= 0 then
-            Remotes.FireClient and nil  -- suppress unused warning
             -- Show "OUT OF FUEL" warning
             local hud = getVehicleHUD()
             local warn_label = hud and hud:FindFirstChild("FuelWarning", true)
