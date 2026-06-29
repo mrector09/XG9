@@ -4,7 +4,7 @@
 local AdminConfig = {}
 
 -- Game owner — has access to everything in the owner panel
-AdminConfig.OwnerId = 0  -- REPLACE with your Roblox UserId
+AdminConfig.OwnerId = 23284440
 
 -- Admin tier list: "Owner" > "HeadAdmin" > "Admin" > "Moderator"
 AdminConfig.Admins = {
