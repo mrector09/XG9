@@ -8,10 +8,29 @@ local RunService       = game:GetService("RunService")
 
 local DataService = {}
 
-local STORE_NAME   = "JTF_PlayerData_v1"
+local STORE_NAME    = "JTF_PlayerData_v1"
 local SAVE_INTERVAL = 60  -- seconds between auto-saves
 
-local DataStore = DataStoreService:GetDataStore(STORE_NAME)
+-- DataStore is unavailable in Studio unless the place is published
+-- AND "Enable Studio Access to API Services" is on in Game Settings.
+-- Fall back to a pure in-memory mock so the rest of the game still works.
+local DataStore
+local IS_STUDIO = RunService:IsStudio()
+
+local ok, result = pcall(function()
+    return DataStoreService:GetDataStore(STORE_NAME)
+end)
+
+if ok then
+    DataStore = result
+else
+    warn("[DataService] DataStore unavailable (Studio or API disabled) — using in-memory mock. Data will NOT persist.")
+    local MockStore = {}
+    DataStore = {
+        GetAsync = function(_, key) return MockStore[key] end,
+        SetAsync = function(_, key, val) MockStore[key] = val end,
+    }
+end
 
 -- In-memory cache. Keyed by UserId (number).
 local Cache = {}

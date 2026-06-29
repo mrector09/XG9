@@ -110,6 +110,9 @@ function Remotes.Init()
         "NotificationSent",      -- server → client: { title, body, icon }
         "TutorialStepTriggered", -- server → client: { step }
         "ProfileCardUpdated",    -- server → client: { profileData }
+
+        -- Admin
+        "AdminAnnounce",         -- server → all clients: { message, sender, time }
     }
 
     for _, name in ipairs(eventNames) do
@@ -132,6 +135,8 @@ function Remotes.Init()
         "GetLeaderboard",       -- args: category → returns top 25 entries
         "SetCallsign",          -- args: callsign → returns ok, reason
         "SelectBranch",         -- args: branch → returns ok
+        "AdminCommand",         -- args: cmd, ...args → returns { ok, msg/data }
+        "AdminGetPlayers",      -- returns list of online players with data snapshots
     }
 
     for _, name in ipairs(functionNames) do
