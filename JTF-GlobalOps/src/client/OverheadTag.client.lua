@@ -1,12 +1,12 @@
--- OverheadTag.client.lua — shows rank + name above every player's head.
--- Reads from player.leaderstats.Rank (StringValue set by RankService).
+-- OverheadTag.client.lua — rank tag above every player's head.
+-- No module dependencies; reads leaderstats.Rank once available.
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
-print("[JTF] OverheadTag client starting")
+print("[JTF] OverheadTag: script started")
 
--- Rank abbreviations matched to RankConfig order
-local RANK_ABBR = {
+local ABBR = {
     ["Recruit"]              = "RCT",
     ["Private"]              = "PVT",
     ["Specialist"]           = "SPC",
@@ -20,15 +20,14 @@ local RANK_ABBR = {
     ["General"]              = "GEN",
 }
 
--- Color per tier group
-local RANK_COLOR = {
-    RCT = Color3.fromRGB(180, 190, 200),  -- enlisted: muted white
+local TIER_COLOR = {
+    RCT = Color3.fromRGB(180, 190, 200),
     PVT = Color3.fromRGB(180, 190, 200),
     SPC = Color3.fromRGB(180, 190, 200),
-    SGT = Color3.fromRGB( 46, 175,  80),  -- NCO: green
+    SGT = Color3.fromRGB( 46, 175,  80),
     SSG = Color3.fromRGB( 46, 175,  80),
     SFC = Color3.fromRGB( 46, 175,  80),
-    LT  = Color3.fromRGB(255, 184,   0),  -- officer: gold
+    LT  = Color3.fromRGB(255, 184,   0),
     CPT = Color3.fromRGB(255, 184,   0),
     MAJ = Color3.fromRGB(255, 184,   0),
     COL = Color3.fromRGB(255, 210,  60),
@@ -36,149 +35,139 @@ local RANK_COLOR = {
 }
 
 local function getAbbr(rankName)
-    return RANK_ABBR[rankName] or rankName:sub(1, 3):upper()
+    return ABBR[rankName] or string.upper(string.sub(rankName or "RCT", 1, 3))
 end
 
 local function getColor(abbr)
-    return RANK_COLOR[abbr] or Color3.fromRGB(200, 200, 200)
+    return TIER_COLOR[abbr] or Color3.fromRGB(200, 200, 200)
 end
 
--- ─── Build the BillboardGui ────────────────────────────────────────────────────
+local function buildTag(player, character)
+    print("[JTF] OverheadTag: building tag for", player.Name)
 
-local function makeTag(character, player)
-    local head = character:WaitForChild("Head", 5)
-    if not head then return end
+    local head = character:WaitForChild("Head", 10)
+    if not head then
+        warn("[JTF] OverheadTag: no Head found for", player.Name)
+        return
+    end
 
-    -- Remove any existing tag
-    local existing = head:FindFirstChild("OverheadTag")
-    if existing then existing:Destroy() end
+    -- Remove stale tag
+    local old = head:FindFirstChild("OverheadTag")
+    if old then old:Destroy() end
 
-    -- Read current rank from leaderstats
-    local leaderstats = player:WaitForChild("leaderstats", 6)
-    local rankValue   = leaderstats and leaderstats:FindFirstChild("Rank")
-    local rankName    = (rankValue and rankValue.Value ~= "") and rankValue.Value or "Recruit"
-    local abbr        = getAbbr(rankName)
-    local rankColor   = getColor(abbr)
-
-    -- BillboardGui
+    -- ── BillboardGui ──────────────────────────────────────────────────────────
     local bill = Instance.new("BillboardGui")
-    bill.Name             = "OverheadTag"
-    bill.Size             = UDim2.new(0, 180, 0, 52)
-    bill.StudsOffset      = Vector3.new(0, 2.8, 0)
-    bill.AlwaysOnTop      = false
-    bill.ResetOnSpawn     = false
-    bill.LightInfluence   = 0
-    bill.Parent           = head
+    bill.Name         = "OverheadTag"
+    bill.Size         = UDim2.new(0, 200, 0, 56)
+    bill.StudsOffset  = Vector3.new(0, 3.2, 0)
+    bill.AlwaysOnTop  = false
+    bill.ResetOnSpawn = false
+    bill.MaxDistance  = 80
+    bill.Parent       = head
 
-    -- Outer frame (dark bg with slight transparency)
+    -- Dark background
     local bg = Instance.new("Frame")
-    bg.Name                   = "BG"
     bg.Size                   = UDim2.new(1, 0, 1, 0)
     bg.BackgroundColor3       = Color3.fromRGB(8, 10, 16)
-    bg.BackgroundTransparency = 0.35
+    bg.BackgroundTransparency = 0.3
     bg.BorderSizePixel        = 0
     bg.Parent                 = bill
+    local bgCorner = Instance.new("UICorner")
+    bgCorner.CornerRadius = UDim.new(0, 6)
+    bgCorner.Parent = bg
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = bg
+    -- Rank abbreviation (left, colored by tier)
+    local rankLbl = Instance.new("TextLabel")
+    rankLbl.Name                 = "RankAbbr"
+    rankLbl.Size                 = UDim2.new(0, 46, 1, 0)
+    rankLbl.Position             = UDim2.new(0, 8, 0, 0)
+    rankLbl.Text                 = "RCT"
+    rankLbl.TextColor3           = Color3.fromRGB(180, 190, 200)
+    rankLbl.Font                 = Enum.Font.GothamBold
+    rankLbl.TextSize             = 14
+    rankLbl.BackgroundTransparency = 1
+    rankLbl.TextXAlignment       = Enum.TextXAlignment.Left
+    rankLbl.TextYAlignment       = Enum.TextYAlignment.Center
+    rankLbl.Parent               = bg
 
-    -- Accent left bar (rank color)
-    local bar = Instance.new("Frame")
-    bar.Name            = "Bar"
-    bar.Size            = UDim2.new(0, 3, 1, -8)
-    bar.Position        = UDim2.new(0, 5, 0, 4)
-    bar.BackgroundColor3 = rankColor
-    bar.BorderSizePixel  = 0
-    bar.Parent           = bg
-    local barCorner = Instance.new("UICorner")
-    barCorner.CornerRadius = UDim.new(1, 0)
-    barCorner.Parent = bar
+    -- Divider
+    local div = Instance.new("Frame")
+    div.Size             = UDim2.new(0, 1, 0, 30)
+    div.Position         = UDim2.new(0, 56, 0.5, -15)
+    div.BackgroundColor3 = Color3.fromRGB(50, 65, 85)
+    div.BorderSizePixel  = 0
+    div.Parent           = bg
 
-    -- Rank abbreviation label
-    local rankLabel = Instance.new("TextLabel")
-    rankLabel.Name               = "RankLabel"
-    rankLabel.Size               = UDim2.new(0, 42, 1, 0)
-    rankLabel.Position           = UDim2.new(0, 13, 0, 0)
-    rankLabel.Text               = abbr
-    rankLabel.TextColor3         = rankColor
-    rankLabel.Font               = Enum.Font.GothamBold
-    rankLabel.TextSize           = 13
-    rankLabel.BackgroundTransparency = 1
-    rankLabel.TextXAlignment     = Enum.TextXAlignment.Left
-    rankLabel.TextYAlignment     = Enum.TextYAlignment.Center
-    rankLabel.Parent             = bg
+    -- Player display name
+    local nameLbl = Instance.new("TextLabel")
+    nameLbl.Name                 = "PlayerName"
+    nameLbl.Size                 = UDim2.new(1, -66, 0.55, 0)
+    nameLbl.Position             = UDim2.new(0, 62, 0, 4)
+    nameLbl.Text                 = player.DisplayName
+    nameLbl.TextColor3           = Color3.fromRGB(230, 238, 250)
+    nameLbl.Font                 = Enum.Font.GothamBold
+    nameLbl.TextSize             = 13
+    nameLbl.BackgroundTransparency = 1
+    nameLbl.TextXAlignment       = Enum.TextXAlignment.Left
+    nameLbl.TextTruncate         = Enum.TextTruncate.AtEnd
+    nameLbl.Parent               = bg
 
-    -- Separator
-    local sep = Instance.new("Frame")
-    sep.Size             = UDim2.new(0, 1, 0, 28)
-    sep.Position         = UDim2.new(0, 54, 0.5, -14)
-    sep.BackgroundColor3 = Color3.fromRGB(50, 60, 80)
-    sep.BorderSizePixel  = 0
-    sep.Parent           = bg
+    -- @username subtitle
+    local subLbl = Instance.new("TextLabel")
+    subLbl.Name                 = "UserName"
+    subLbl.Size                 = UDim2.new(1, -66, 0.42, 0)
+    subLbl.Position             = UDim2.new(0, 62, 0.55, 0)
+    subLbl.Text                 = "@" .. player.Name
+    subLbl.TextColor3           = Color3.fromRGB(90, 105, 125)
+    subLbl.Font                 = Enum.Font.Gotham
+    subLbl.TextSize             = 10
+    subLbl.BackgroundTransparency = 1
+    subLbl.TextXAlignment       = Enum.TextXAlignment.Left
+    subLbl.TextTruncate         = Enum.TextTruncate.AtEnd
+    subLbl.Parent               = bg
 
-    -- Player name
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Name               = "NameLabel"
-    nameLabel.Size               = UDim2.new(1, -65, 0.58, 0)
-    nameLabel.Position           = UDim2.new(0, 60, 0, 4)
-    nameLabel.Text               = player.DisplayName
-    nameLabel.TextColor3         = Color3.fromRGB(230, 238, 248)
-    nameLabel.Font               = Enum.Font.GothamBold
-    nameLabel.TextSize           = 13
-    nameLabel.TextScaled         = false
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.TextXAlignment     = Enum.TextXAlignment.Left
-    nameLabel.TextTruncate       = Enum.TextTruncate.AtEnd
-    nameLabel.Parent             = bg
-
-    -- Username (smaller, muted) if display name differs
-    local subLabel = Instance.new("TextLabel")
-    subLabel.Name               = "SubLabel"
-    subLabel.Size               = UDim2.new(1, -65, 0.4, 0)
-    subLabel.Position           = UDim2.new(0, 60, 0.58, 0)
-    subLabel.Text               = "@" .. player.Name
-    subLabel.TextColor3         = Color3.fromRGB(100, 115, 135)
-    subLabel.Font               = Enum.Font.Gotham
-    subLabel.TextSize           = 10
-    subLabel.TextScaled         = false
-    subLabel.BackgroundTransparency = 1
-    subLabel.TextXAlignment     = Enum.TextXAlignment.Left
-    subLabel.TextTruncate       = Enum.TextTruncate.AtEnd
-    subLabel.Parent             = bg
-
-    -- Live-update when rank changes
-    if rankValue then
-        rankValue.Changed:Connect(function(newRankName)
-            local newAbbr  = getAbbr(newRankName)
-            local newColor = getColor(newAbbr)
-            rankLabel.Text       = newAbbr
-            rankLabel.TextColor3 = newColor
-            bar.BackgroundColor3 = newColor
-        end)
+    -- ── Read leaderstats (may arrive after character) ─────────────────────────
+    local function applyRank(rankName)
+        local abbr  = getAbbr(rankName)
+        local color = getColor(abbr)
+        rankLbl.Text       = abbr
+        rankLbl.TextColor3 = color
     end
 
-    return bill
+    -- Try to find leaderstats immediately; if not ready, wait in background
+    task.spawn(function()
+        local ls = player:WaitForChild("leaderstats", 10)
+        if not ls then
+            warn("[JTF] OverheadTag: leaderstats not found for", player.Name, "— server may not have started")
+            return
+        end
+        local rankVal = ls:WaitForChild("Rank", 5)
+        if rankVal then
+            applyRank(rankVal.Value)
+            rankVal.Changed:Connect(applyRank)
+        end
+    end)
+
+    print("[JTF] OverheadTag: tag built for", player.Name)
 end
 
--- ─── Hook all players ─────────────────────────────────────────────────────────
+-- ── Hook players ──────────────────────────────────────────────────────────────
 
-local function onCharacterAdded(player, character)
-    task.spawn(makeTag, character, player)
-end
-
-local function onPlayerAdded(player)
+local function onPlayer(player)
+    -- Already spawned
     if player.Character then
-        onCharacterAdded(player, player.Character)
+        task.spawn(buildTag, player, player.Character)
     end
+    -- Future spawns
     player.CharacterAdded:Connect(function(char)
-        onCharacterAdded(player, char)
+        task.spawn(buildTag, player, char)
     end)
 end
 
--- Existing players (e.g. if script loads after PlayerAdded already fired)
 for _, p in ipairs(Players:GetPlayers()) do
-    onPlayerAdded(p)
+    onPlayer(p)
 end
 
-Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerAdded:Connect(onPlayer)
+
+print("[JTF] OverheadTag: ready, watching", #Players:GetPlayers(), "player(s)")
