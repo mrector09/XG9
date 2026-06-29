@@ -371,7 +371,7 @@ closeBtn.MouseButton1Click:Connect(close)
 
 -- UIController calls open via the M key — but we also expose it via BindableFunction
 local openFn = Instance.new("BindableFunction")
-openFn.Name   = "OpenMissionBoard"
+openFn.Name   = "Open_MissionBoard"
 openFn.Parent = PlayerGui
 openFn.OnInvoke = open
 
