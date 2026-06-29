@@ -504,7 +504,7 @@ local refreshLogsBtn = Theme.Button(logsPage, "RefreshLogs", "↻ Refresh Logs",
     UDim2.new(0, 130, 0, 28), nil, "muted")
 refreshLogsBtn.LayoutOrder = 3
 refreshLogsBtn.MouseButton1Click:Connect(function()
-    local res = invokeAdmin("AdminCommand", "viewLogs", "30")
+    local res = invokeAdmin("viewLogs", "30")
     if res and res.ok and res.data then
         for _, c in ipairs(logScroll:GetChildren()) do
             if c:IsA("Frame") then c:Destroy() end
@@ -540,18 +540,20 @@ backdrop.InputBegan:Connect(function(inp)
     end
 end)
 
--- Toggle key: F9
+-- Toggle keys: F9 (in-game) or BackQuote/` (Studio-safe alternative)
+-- Note: F9 opens the Dev Console in Studio — use ` in Studio instead
 UserInputService.InputBegan:Connect(function(inp, gpe)
     if gpe then return end
-    if inp.KeyCode == Enum.KeyCode.F9 then
+    if inp.KeyCode == Enum.KeyCode.F9
+    or inp.KeyCode == Enum.KeyCode.BackQuote then
         setOpen(not isOpen)
     end
 end)
 
--- Remote: allow server or other UI to open panel
+-- BindableFunction so MainMenu button and other scripts can open the panel
 local OpenPanel = Instance.new("BindableFunction")
-OpenPanel.Name  = "OpenOwnerPanel"
+OpenPanel.Name   = "OpenOwnerPanel"
 OpenPanel.Parent = LocalPlayer.PlayerGui
 OpenPanel.OnInvoke = function() setOpen(true) end
 
-print("[OwnerPanel] Loaded — F9 to toggle")
+print("[OwnerPanel] Loaded — press ` (backtick) or F9 to toggle")

@@ -184,19 +184,17 @@ local function showJobs(branchName)
         if c:IsA("Frame") then c:Destroy() end
     end
 
-    local branchData = JobCfg.Branches and JobCfg.Branches[branchName]
-    if not branchData then
+    local jobs = JobCfg.Jobs and JobCfg.Jobs[branchName]
+    if not jobs then
         Theme.Label(jobScroll, "None", "No jobs configured for this branch.",
             UDim2.new(1,0,0,30), nil, Theme.Colors.TextMuted, 12)
         return
     end
 
-    local jobs = branchData.Jobs or branchData
     local order = 1
     for jobId, jobEntry in pairs(jobs) do
-        jobEntry.order = order
+        buildJobCard(branchName, jobId, jobEntry, order)
         order += 1
-        buildJobCard(branchName, jobId, jobEntry)
     end
 end
 
